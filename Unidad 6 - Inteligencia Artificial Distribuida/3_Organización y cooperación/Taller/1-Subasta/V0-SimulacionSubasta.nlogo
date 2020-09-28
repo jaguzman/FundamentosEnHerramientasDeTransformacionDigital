@@ -1,133 +1,13 @@
-breed [ compradores comprador ]
-breed [ tiendas tienda ]
-
-compradores-own [ lista-de-compra memoria ]
-tiendas-own [ producto ]
-
-globals [ productos ]
-
-to setup
-  let producto-numero 0
-  clear-all
-  reset-ticks
-  ask patches [ set pcolor yellow ]
-  set productos ["aceite" "bebidas" "cerveza" "detergente"
-                  "especias" "flores" "gasoil" "huevos" "infusiones"
-                  "jamon" "kafe" "levadura"]
-   set-default-shape compradores "person"
-   create-compradores 10
-   [
-    set color pink set heading 0 set size 2
-    setxy (random world-width) + min-pxcor
-          (random world-height) + min-pycor
-    set lista-de-compra n-values 10
-         [ item (random (length productos)) productos]
-    set memoria [ ]
-   ]
-
-
- set-default-shape tiendas "box"
- create-tiendas 12
-  [
-    set color black set heading 0 set size 2
-    setxy (random world-width) + min-pxcor
-    (random world-height) + min-pycor
-    set producto item producto-numero productos
-    set producto-numero producto-numero + 1
-    set label producto set label-color red
-  ]
-end
-
-to Go
- ask compradores [ actuar ]
- if Grafico? [
- plot count compradores with [ empty? lista-de-compra ] * 10
- ]
-   if count compradores with [ not empty? lista-de-compra ] = 0
-      [ stop ]
-   tick
-end
-
-to actuar
- if any? other compradores-here [ hablar ]
- ifelse not empty? lista-de-compra
-    [ comprar ]
-    [ set color sky ]
-end
-
-to comprar
- let tienda-mas-cercana-conocida 0
- recordar productos-de-venta-aqui
- if any? tiendas-here [ compra-si-necesitas ]
- set tienda-mas-cercana-conocida buscar-memoria
- ifelse tienda-mas-cercana-conocida != "Ninguna"
- [ avanzar-hacia tienda-mas-cercana-conocida ]
- [
- avanzar-al-azar
- ]
-end
-
-to compra-si-necesitas
- let tienda-visitada 0
- set tienda-visitada one-of tiendas-here
- if member? [producto] of tienda-visitada lista-de-compra
- [ set lista-de-compra remove [producto] of tienda-visitada lista-de-compra ]
-end
-
-to-report buscar-memoria
- let tienda-por-visitar 0
- set tienda-por-visitar filter [ [?1] -> member? (first ?1) lista-de-compra ] memoria
- ifelse empty? tienda-por-visitar
-[ report "Ninguna" ]
-[ report first (sort-by
- [ [?1 ?2] -> distancexy (last butlast ?1) (last ?1) < distancexy (last butlast ?2) (last ?2) ]
- tienda-por-visitar)
-]
-end
-
-
-to avanzar-al-azar
- set heading (random 360)
- avanzar
-end
-
-to avanzar-hacia [ localizacion-de-la-tienda ]
- if not (xcor = (last butlast localizacion-de-la-tienda) and ycor = (last localizacion-de-la-tienda))
- [ set heading towardsxy (last butlast localizacion-de-la-tienda) (last localizacion-de-la-tienda)
-    avanzar ]
-end
-
-to avanzar
- forward 1
-end
-
-to recordar [ localizacion-tiendas ]
- set memoria remove-duplicates sentence memoria localizacion-tiendas
-end
-
-to-report productos-de-venta-aqui
- report [ (list producto xcor ycor) ] of (tiendas-on neighbors)
-end
-
-to hablar
- let pareja 0
- set pareja one-of other compradores-here
- recordar [memoria] of pareja
- ask pareja [ recordar [memoria] of myself ]
-end
-
-
-
 
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+191
 10
-647
-448
+620
+440
 -1
 -1
-13.0
+12.76
 1
 10
 1
@@ -137,8 +17,8 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
+0
+32
 -16
 16
 0
@@ -148,12 +28,12 @@ ticks
 30.0
 
 BUTTON
-12
-25
-76
-58
+3
+179
+62
+241
 NIL
-Setup
+setup
 NIL
 1
 T
@@ -163,14 +43,96 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+1
+13
+173
+46
+NumeroPostores
+NumeroPostores
+2
+30
+14.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+1
+45
+173
+78
+PrecioObjeto
+PrecioObjeto
+50
+900
+280.0
+10
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+111
+172
+144
+Tiempo
+Tiempo
+20
+35
+20.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+145
+172
+178
+OfertaMinima
+OfertaMinima
+5
+150
+21.0
+1
+1
+NIL
+HORIZONTAL
+
+OUTPUT
+627
+10
+1005
+295
+15
+
+SLIDER
+1
+77
+173
+110
+CantidadEuros
+CantidadEuros
+50
+5000
+1626.0
+1
+1
+NIL
+HORIZONTAL
 
 BUTTON
-98
-25
-161
-58
+4
+246
+67
+279
 NIL
-Go
+go
 T
 1
 T
@@ -181,82 +143,100 @@ NIL
 NIL
 0
 
-MONITOR
-69
-72
-126
-117
-Tiempo
-Ticks
-0
+TEXTBOX
+88
+332
+238
+350
+Leyenda
+12
+0.0
 1
+
+TEXTBOX
+99
+362
+249
+380
+subastador
 11
-
-PLOT
-705
-33
-1073
-286
-Evolución de Satisfación Cliente
-Tiempo
-%
 0.0
-20000.0
-0.0
-100.0
-false
-false
-"" ""
-PENS
-"pen-0" 1.0 0 -7500403 true "" ""
-
-SWITCH
-45
-134
-148
-167
-Grafico?
-Grafico?
-0
 1
--1000
+
+TEXTBOX
+101
+380
+251
+398
+postores
+11
+0.0
+1
+
+TEXTBOX
+54
+323
+94
+452
+_
+58
+55.0
+1
+
+TEXTBOX
+54
+307
+112
+384
+_
+58
+15.0
+1
+
+TEXTBOX
+99
+404
+249
+422
+postor ganador
+11
+0.0
+1
+
+TEXTBOX
+100
+430
+250
+458
+Perdedores\n(postores)
+11
+0.0
+1
+
+TEXTBOX
+54
+372
+116
+450
+_
+58
+135.0
+1
+
+TEXTBOX
+53
+346
+101
+427
+_
+58
+45.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
-
-## HOW IT WORKS
-
-(what rules the agents use to create the overall behavior of the model)
-
-## HOW TO USE IT
-
-(how to use the model, including a description of each of the items in the Interface tab)
-
-## THINGS TO NOTICE
-
-(suggested things for the user to notice while running the model)
-
-## THINGS TO TRY
-
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
-
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
-
-## CREDITS AND REFERENCES
-
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+A simulacion de una Subasta Inglesa.
 @#$#@#$#@
 default
 true
@@ -567,6 +547,29 @@ NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="AuctionAtEnd" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>Pricebid</metric>
+    <metric>K</metric>
+    <metric>S</metric>
+    <enumeratedValueSet variable="Cooperation">
+      <value value="false"/>
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="G" first="2" step="2" last="10"/>
+    <enumeratedValueSet variable="Time">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MinimumBid">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="HowManyEuro" first="811" step="100" last="1000"/>
+    <steppedValueSet variable="Howmanybidders" first="5" step="5" last="30"/>
+    <steppedValueSet variable="PriceObject" first="50" step="100" last="850"/>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
